@@ -28,63 +28,85 @@ echo 'Search for minimum-visibility : '.$minimumStability."\n";
 $requires = "require";
 $requires = $composerConf->$requires;
 
-$$availablesUpdates = array();
+$availablesUpdates = array();
 
 foreach ($requires as $package => $currentVersion) {
     if ($package == "php") {
         continue;
     }
 
-    echo "Searching update for ".$package."\n";
-    echo "Current version : ".$currentVersion."\n\n";
+    echo "Searching update for ".$package.PHP_EOL;
+    if ($currentVersion == "dev-master") {
+        echo "No update need for ".$currentVersion.PHP_EOL.PHP_EOL;
+        continue;
+    } else {
 
-    // Création du tableau de version
-    preg_match('`^([0-9]*).([0-9*]*).([0-9*]*)`', $currentVersion, $cvDetails);
+        $tmpVersions = preg_split('`,`', $currentVersion);
+        $minVersion = $tmpVersions[0];
+        if (count($tmpVersions) > 1) {
+            $maxVersion = $tmpVersions[1];
+        } else {
+            $maxVersion = $minVersion;
+        }
+
+        if (substr($maxVersion, 0, 1) == '>') {
+            echo "No update need for ".$currentVersion.PHP_EOL.PHP_EOL;
+            continue;
+        }
+
+        echo "Current max version : ".$maxVersion.PHP_EOL.PHP_EOL;
+
+        $minVerson = "";
+        $maxVersion = "";
+
+        // Création du tableau de version
+        preg_match('`^([0-9]*).([0-9*]*).([0-9*]*)`', $currentVersion, $cvDetails);
 //    var_dump($cvDetails);
 
-    $cmdShowResult = `composer show $package`;
-    preg_match('`versions : (.*)\n`', $cmdShowResult, $availablesVersions);
-    $availablesVersions = preg_split('`,`', $availablesVersions[1]);
+        $cmdShowResult = `composer show $package`;
+        preg_match('`versions : (.*)\n`', $cmdShowResult, $availablesVersions);
+        $availablesVersions = preg_split('`,`', $availablesVersions[1]);
 
-    $matchesVersions = array();
-    foreach ($availablesVersions as $av) {
-        switch ($minimumStability) {
-            case 'dev':
-                if (preg_match('`'.$minimumStability.'$`', $av)) {
-                    $matchesVersions[] = trim($av);
-                    foreach ($matchesVersions as $mv) {
-                        preg_match('`^([0-9]*).([0-9*]*).([0-9*]*)`', $mv, $mvDetails);
-                        if ($mvDetails[1] > $cvDetails[1]) {
-                            $$availablesUpdates[$package] = $mv;
-                            break 2;
-                        }
-                        if ($cvDetails[2] != '*' && $mvDetails[2] > $cvDetails[2]) {
-                            $$availablesUpdates[$package] = $mv;
-                            break 2;
-                        }
-                        if ($cvDetails[3] != '*' && $mvDetails[3] > $cvDetails[3]) {
-                            $$availablesUpdates[$package] = $mv;
-                            break 2;
+        $matchesVersions = array();
+        foreach ($availablesVersions as $av) {
+            switch ($minimumStability) {
+                case 'dev':
+                    if (preg_match('`'.$minimumStability.'$`', $av)) {
+                        $matchesVersions[] = trim($av);
+                        foreach ($matchesVersions as $mv) {
+                            preg_match('`^([0-9]*).([0-9*]*).([0-9*]*)`', $mv, $mvDetails);
+                            if ($mvDetails[1] > $cvDetails[1]) {
+                                $availablesUpdates[$package] = $mv;
+                                break 2;
+                            }
+                            if ($cvDetails[2] != '*' && $mvDetails[2] > $cvDetails[2]) {
+                                $availablesUpdates[$package] = $mv;
+                                break 2;
+                            }
+                            if ($cvDetails[3] != '*' && $mvDetails[3] > $cvDetails[3]) {
+                                $availablesUpdates[$package] = $mv;
+                                break 2;
+                            }
                         }
                     }
-                }
-                break;
+                    break;
+            }
         }
-    }
 //    var_dump($$availablesUpdates);
 //
 //    die();
 //    echo $package." : version ".$version."\n";
+    }
 }
 
 $requiresDev = "require-dev";
 $requiresDev = $composerConf->$requiresDev;
 
-if (count($$availablesUpdates) == 0) {
-    echo "No update found for your dependancies.\n";
+if (count($availablesUpdates) == 0) {
+    echo "No update found for your dependancies.".PHP_EOL;
 } else {
-    foreach ($$availablesUpdates as $package => $au) {
-        echo "Update found for ".$package.": last available version is ".$au."\n";
+    foreach ($availablesUpdates as $package => $au) {
+        echo "Update found for ".$package.": last available version is ".$au.PHP_EOL;
     }
 }
-//var_dump($$availablesUpdates);
+//var_dump($availablesUpdates);
