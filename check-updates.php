@@ -36,6 +36,8 @@ foreach ($requires as $package => $currentVersion) {
     }
 
     echo "Searching update for ".$package.PHP_EOL;
+
+    // No check if 'dev-master'
     if ($currentVersion == "dev-master") {
         echo "No update need for ".$currentVersion.PHP_EOL.PHP_EOL;
         continue;
@@ -49,6 +51,7 @@ foreach ($requires as $package => $currentVersion) {
             $maxVersion = $minVersion;
         }
 
+        // No check if '>' or '>=' operators are presents
         if (substr($maxVersion, 0, 1) == '>') {
             echo "No update need for ".$currentVersion.PHP_EOL.PHP_EOL;
             continue;
