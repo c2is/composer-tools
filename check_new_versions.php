@@ -27,7 +27,7 @@ switch ($minimumStability) {
     case 'stable':
         $colorizedMinimumStability = colorize('Green', $minimumStability);
         break;
-    case 'stable':
+    case 'dev':
         $colorizedMinimumStability = colorize('Red', $minimumStability);
         break;
     default:
