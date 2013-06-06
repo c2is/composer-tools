@@ -13,7 +13,7 @@ if [ -f $COMPOSER_FILE ]; then
     VALIDATE=`composer validate $COMPOSER_FILE | grep ' is valid'`
 
     if [ "$VALIDATE" ]; then
-        php check-updates.php $PROJECT_DIR
+        php check_new_versions.php $PROJECT_DIR
     else
         printf "Votre fichier fichier composer.json comporte des erreurs. Veuillez les corriger avant vérifier les mises à jour possible."
         printf "Rapport de composer :"
