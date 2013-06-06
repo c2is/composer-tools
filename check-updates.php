@@ -23,7 +23,18 @@ $composerConf = json_decode(file_get_contents($projectDir.'composer.json'));
 
 $minimumStability = "minimum-stability";
 $minimumStability = $composerConf->$minimumStability;
-echo 'Search for minimum-visibility : '.$minimumStability."\n";
+switch ($minimumStability) {
+    case 'stable':
+        $colorizedMinimumStability = colorize('Green', $minimumStability);
+        break;
+    case 'stable':
+        $colorizedMinimumStability = colorize('Red', $minimumStability);
+        break;
+    default:
+        $colorizedMinimumStability = $minimumStability;
+        break;
+}
+echo 'Search for minimum-visibility : '.$colorizedMinimumStability."\n";
 
 $requires = "require";
 $requires = $composerConf->$requires;
@@ -35,70 +46,66 @@ foreach ($requires as $package => $currentVersion) {
         continue;
     }
 
-    echo "Searching update for ".$package.PHP_EOL;
+    echo "Searching update for ".colorize('Green', $package).PHP_EOL;
 
     // No check if 'dev-master'
     if ($currentVersion == "dev-master") {
-        echo "No update need for ".$currentVersion.PHP_EOL.PHP_EOL;
+        echo "No update need for ".colorize('BWhite', $currentVersion).PHP_EOL.PHP_EOL;
         continue;
+    }
+
+    $tmpVersions = preg_split('`,`', $currentVersion);
+    $minVersion = $tmpVersions[0];
+
+    if (count($tmpVersions) > 1) {
+        $maxVersion = $tmpVersions[1];
     } else {
+        $maxVersion = $minVersion;
+    }
+    // No check if '>' or '>=' operators are presents
+    if (substr($maxVersion, 0, 1) == '>') {
+        echo "No update need for ".colorize('BWhite', $currentVersion).PHP_EOL.PHP_EOL;
+        continue;
+    }
+    echo "Current max version : ".colorize('Yellow', $maxVersion).PHP_EOL.PHP_EOL;
 
-        $tmpVersions = preg_split('`,`', $currentVersion);
-        $minVersion = $tmpVersions[0];
-        if (count($tmpVersions) > 1) {
-            $maxVersion = $tmpVersions[1];
-        } else {
-            $maxVersion = $minVersion;
-        }
 
-        // No check if '>' or '>=' operators are presents
-        if (substr($maxVersion, 0, 1) == '>') {
-            echo "No update need for ".$currentVersion.PHP_EOL.PHP_EOL;
-            continue;
-        }
+    // Création du tableau de version
+    preg_match('`^([<=>!~]*)([0-9]*).([0-9*-]*).([0-9*-]*)`', $maxVersion, $cvDetails);
 
-        echo "Current max version : ".$maxVersion.PHP_EOL.PHP_EOL;
+    if ($cvDetails[4] == '*' || $cvDetails[4] == '') {
+        $cvDetails[3] = (string) ($cvDetails[3] + 1);
+        $cvDetails[4] = "0";
+    } else {
+        $cvDetails[4] = (string) ($cvDetails[4] + 1);
+    }
 
-        $minVerson = "";
-        $maxVersion = "";
+    $minVersionToUpdate = implode('.', array_slice($cvDetails, 2, count($cvDetails)-2));
+    switch ($minimumStability) {
+        case 'dev':
+            $minVersionToUpdate .= '-dev';
+            break;
+    }
 
-        // Création du tableau de version
-        preg_match('`^([0-9]*).([0-9*]*).([0-9*]*)`', $currentVersion, $cvDetails);
-//    var_dump($cvDetails);
+    $cmdShowResult = `composer show $package | grep 'versions'`;
+    preg_match('`versions(\033\[0m)* : (.*)`', $cmdShowResult, $availablesVersions);
+    $availablesVersions = preg_split('`,`', $availablesVersions[2]);
 
-        $cmdShowResult = `composer show $package`;
-        preg_match('`versions : (.*)\n`', $cmdShowResult, $availablesVersions);
-        $availablesVersions = preg_split('`,`', $availablesVersions[1]);
-
-        $matchesVersions = array();
-        foreach ($availablesVersions as $av) {
-            switch ($minimumStability) {
-                case 'dev':
-                    if (preg_match('`'.$minimumStability.'$`', $av)) {
-                        $matchesVersions[] = trim($av);
-                        foreach ($matchesVersions as $mv) {
-                            preg_match('`^([0-9]*).([0-9*]*).([0-9*]*)`', $mv, $mvDetails);
-                            if ($mvDetails[1] > $cvDetails[1]) {
-                                $availablesUpdates[$package] = $mv;
-                                break 2;
-                            }
-                            if ($cvDetails[2] != '*' && $mvDetails[2] > $cvDetails[2]) {
-                                $availablesUpdates[$package] = $mv;
-                                break 2;
-                            }
-                            if ($cvDetails[3] != '*' && $mvDetails[3] > $cvDetails[3]) {
-                                $availablesUpdates[$package] = $mv;
-                                break 2;
-                            }
-                        }
-                    }
+    $matchesVersions = array();
+    foreach ($availablesVersions as $av) {
+        $av = preg_replace('`^v`', '', trim($av));
+        switch ($minimumStability) {
+            case 'stable':
+                if (preg_match('`-dev$`', $av)) {
                     break;
-            }
+                }
+            case 'dev':
+                if (version_compare(preg_replace('`x`', 0, $av), $minVersionToUpdate, '>=')) {
+                    $availablesUpdates[$package] = $av;
+                    break 2;
+                }
+                break;
         }
-//    var_dump($$availablesUpdates);
-//
-//    die();
-//    echo $package." : version ".$version."\n";
     }
 }
 
@@ -106,10 +113,24 @@ $requiresDev = "require-dev";
 $requiresDev = $composerConf->$requiresDev;
 
 if (count($availablesUpdates) == 0) {
-    echo "No update found for your dependancies.".PHP_EOL;
+    echo colorize('BWhite', "No update found for your dependancies.".PHP_EOL);
 } else {
+    echo colorize('BWhite', "Summary of available update for ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
     foreach ($availablesUpdates as $package => $au) {
-        echo "Update found for ".$package.": last available version is ".$au.PHP_EOL;
+        echo "Update found for ".colorize('Green', $package).": last available version is ".colorize('Yellow', $au).PHP_EOL;
     }
 }
 //var_dump($availablesUpdates);
+
+function colorize($color, $text) {
+    $colors = array(
+        'close' => "\033[0m",
+        'Green' => "\033[0;32m",
+        'Red' => "\033[0;31m",
+        'Yellow' => "\033[0;33m",
+        'BYellow' => "\033[1;33m",
+        'BWhite' => "\033[1;37m",
+    );
+
+    return $colors[$color].$text.$colors["close"];
+}
