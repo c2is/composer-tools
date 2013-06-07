@@ -37,13 +37,12 @@ switch ($minimumStability) {
 echo 'Search for minimum-visibility : '.$colorizedMinimumStability.PHP_EOL;
 
 $requires = "require";
-$requires = $composerConf->$requires;
 
 $availableUpdates = array();
 $availableDevUpdates = array();
 
-echo "Start check for ".colorize('BWhite', "require").PHP_EOL;
-foreach ($requires as $package => $currentVersion) {
+echo "Start check for ".colorize('BWhite', "require")." section".PHP_EOL;
+foreach ($composerConf->$requires as $package => $currentVersion) {
     if ($package == "php") {
         continue;
     }
@@ -51,14 +50,14 @@ foreach ($requires as $package => $currentVersion) {
     $tmpRequire = check_version($package, $currentVersion, $minimumStability);
 
     if ($tmpRequire !== null) {
-        array_push($availableUpdates, $tmpRequire);
+        $availableUpdates[$tmpRequire['name']] = $tmpRequire['version'];
     }
 }
 
 $requiresDev = "require-dev";
 if (isset($composerConf->$requiresDev)) {
 
-    echo "Start check for ".colorize('BWhite', $requiresDev).PHP_EOL;
+    echo "Start check for ".colorize('BWhite', $requiresDev)." section".PHP_EOL;
     foreach ($composerConf->$requiresDev as $package => $currentVersion) {
         if ($package == "php") {
             continue;
@@ -66,7 +65,7 @@ if (isset($composerConf->$requiresDev)) {
 
         $tmpRequire = check_version($package, $currentVersion, $minimumStability);
         if ($tmpRequire !== null) {
-            array_push($availableDevUpdates, $tmpRequire);
+            $availableDevUpdates[$tmpRequire['name']] = $tmpRequire['version'];
         }
     }
 }
@@ -74,17 +73,18 @@ if (isset($composerConf->$requiresDev)) {
 if (count($availableUpdates) == 0) {
     echo colorize('BWhite', "No update found for your dependancies.".PHP_EOL);
 } else {
-    echo colorize('BWhite', "Summary of available updates for ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
+    echo colorize('BWhite', "Summary of available updates for ").colorize('Green', $requires).colorize('BWhite', " section in ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
     foreach ($availableUpdates as $package => $au) {
         echo "Update found for ".colorize('Green', $package).": last available version is ".colorize('Yellow', $au).PHP_EOL;
     }
 }
 
 if (isset($composerConf->$requiresDev) && count($composerConf->$requiresDev) > 0) {
+    echo PHP_EOL;
     if (count($availableDevUpdates) == 0) {
         echo colorize('BWhite', "No update found for your dev dependancies.".PHP_EOL);
     } else {
-        echo colorize('BWhite', "Summary of available updates for ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
+        echo colorize('BWhite', "Summary of available updates for ").colorize('Yellow', $requiresDev).colorize('BWhite', " section in ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
         foreach ($availableDevUpdates as $package => $au) {
             echo "Update found for ".colorize('Green', $package).": last available version is ".colorize('Yellow', $au).PHP_EOL;
         }
@@ -122,12 +122,11 @@ function check_version($package, $currentVersion, $minimumStability) {
         $maxVersion = $minVersion;
     }
     // No check if '>' or '>=' operators are presents
-    if (substr($maxVersion, 0, 1) == '>') {
+    if (substr($maxVersion, 0, 1) == '>' || $maxVersion == "*") {
         echo "No update need for ".colorize('BWhite', $currentVersion).PHP_EOL.PHP_EOL;
         return null;
     }
     echo "Current max version : ".colorize('Yellow', $maxVersion).PHP_EOL.PHP_EOL;
-
 
     // Création du tableau de version
     preg_match('`^([<=>!~]*)([0-9]*).([0-9*-]*).([0-9*-]*)`', $maxVersion, $cvDetails);
@@ -152,6 +151,7 @@ function check_version($package, $currentVersion, $minimumStability) {
 
     $matchesVersions = array();
     foreach ($availablesVersions as $av) {
+        // Strip optional v before version number
         $av = preg_replace('`^v`', '', trim($av));
         switch ($minimumStability) {
             case 'stable':
@@ -160,7 +160,7 @@ function check_version($package, $currentVersion, $minimumStability) {
                 }
             case 'dev':
                 if (version_compare(preg_replace('`x`', 0, $av), $minVersionToUpdate, '>=')) {
-                    return array($package => $av);
+                    return array('name' => $package, 'version' => $av);
                 }
                 break;
         }
