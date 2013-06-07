@@ -34,24 +34,83 @@ switch ($minimumStability) {
         $colorizedMinimumStability = $minimumStability;
         break;
 }
-echo 'Search for minimum-visibility : '.$colorizedMinimumStability."\n";
+echo 'Search for minimum-visibility : '.$colorizedMinimumStability.PHP_EOL;
 
 $requires = "require";
 $requires = $composerConf->$requires;
 
-$availablesUpdates = array();
+$availableUpdates = array();
+$availableDevUpdates = array();
 
+echo "Start check for ".colorize('BWhite', "require").PHP_EOL;
 foreach ($requires as $package => $currentVersion) {
     if ($package == "php") {
         continue;
     }
 
+    $tmpRequire = check_version($package, $currentVersion, $minimumStability);
+
+    if ($tmpRequire !== null) {
+        array_push($availableUpdates, $tmpRequire);
+    }
+}
+
+$requiresDev = "require-dev";
+if (isset($composerConf->$requiresDev)) {
+
+    echo "Start check for ".colorize('BWhite', $requiresDev).PHP_EOL;
+    foreach ($composerConf->$requiresDev as $package => $currentVersion) {
+        if ($package == "php") {
+            continue;
+        }
+
+        $tmpRequire = check_version($package, $currentVersion, $minimumStability);
+        if ($tmpRequire !== null) {
+            array_push($availableDevUpdates, $tmpRequire);
+        }
+    }
+}
+
+if (count($availableUpdates) == 0) {
+    echo colorize('BWhite', "No update found for your dependancies.".PHP_EOL);
+} else {
+    echo colorize('BWhite', "Summary of available updates for ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
+    foreach ($availableUpdates as $package => $au) {
+        echo "Update found for ".colorize('Green', $package).": last available version is ".colorize('Yellow', $au).PHP_EOL;
+    }
+}
+
+if (isset($composerConf->$requiresDev) && count($composerConf->$requiresDev) > 0) {
+    if (count($availableDevUpdates) == 0) {
+        echo colorize('BWhite', "No update found for your dev dependancies.".PHP_EOL);
+    } else {
+        echo colorize('BWhite', "Summary of available updates for ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
+        foreach ($availableDevUpdates as $package => $au) {
+            echo "Update found for ".colorize('Green', $package).": last available version is ".colorize('Yellow', $au).PHP_EOL;
+        }
+    }
+}
+
+function colorize($color, $text) {
+    $colors = array(
+        'close' => "\033[0m",
+        'Green' => "\033[0;32m",
+        'Red' => "\033[0;31m",
+        'Yellow' => "\033[0;33m",
+        'BYellow' => "\033[1;33m",
+        'BWhite' => "\033[1;37m",
+    );
+
+    return $colors[$color].$text.$colors["close"];
+}
+
+function check_version($package, $currentVersion, $minimumStability) {
     echo "Searching update for ".colorize('Green', $package).PHP_EOL;
 
     // No check if 'dev-master'
     if ($currentVersion == "dev-master") {
         echo "No update need for ".colorize('BWhite', $currentVersion).PHP_EOL.PHP_EOL;
-        continue;
+        return null;
     }
 
     $tmpVersions = preg_split('`,`', $currentVersion);
@@ -65,7 +124,7 @@ foreach ($requires as $package => $currentVersion) {
     // No check if '>' or '>=' operators are presents
     if (substr($maxVersion, 0, 1) == '>') {
         echo "No update need for ".colorize('BWhite', $currentVersion).PHP_EOL.PHP_EOL;
-        continue;
+        return null;
     }
     echo "Current max version : ".colorize('Yellow', $maxVersion).PHP_EOL.PHP_EOL;
 
@@ -101,36 +160,10 @@ foreach ($requires as $package => $currentVersion) {
                 }
             case 'dev':
                 if (version_compare(preg_replace('`x`', 0, $av), $minVersionToUpdate, '>=')) {
-                    $availablesUpdates[$package] = $av;
-                    break 2;
+                    return array($package => $av);
                 }
                 break;
         }
     }
-}
-
-$requiresDev = "require-dev";
-$requiresDev = $composerConf->$requiresDev;
-
-if (count($availablesUpdates) == 0) {
-    echo colorize('BWhite', "No update found for your dependancies.".PHP_EOL);
-} else {
-    echo colorize('BWhite', "Summary of available update for ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
-    foreach ($availablesUpdates as $package => $au) {
-        echo "Update found for ".colorize('Green', $package).": last available version is ".colorize('Yellow', $au).PHP_EOL;
-    }
-}
-//var_dump($availablesUpdates);
-
-function colorize($color, $text) {
-    $colors = array(
-        'close' => "\033[0m",
-        'Green' => "\033[0;32m",
-        'Red' => "\033[0;31m",
-        'Yellow' => "\033[0;33m",
-        'BYellow' => "\033[1;33m",
-        'BWhite' => "\033[1;37m",
-    );
-
-    return $colors[$color].$text.$colors["close"];
+    return null;
 }
