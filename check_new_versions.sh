@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 BASEDIR=$(dirname $0)
 
@@ -15,7 +15,7 @@ if [ -f $COMPOSER_FILE ]; then
     VALIDATE=`composer validate $COMPOSER_FILE | grep ' is valid'`
 
     if [ "$VALIDATE" ]; then
-        if [ "$PROJECT_DIR" != "/*" && "$PROJECT_DIR" := "~" ]; then
+        if [[ ! $PROJECT_DIR != ^/ && ! $PROJECT_DIR != ^~ ]]; then
             PROJECT_DIR=`pwd`'/'$PROJECT_DIR
         fi
         if [ "$PROJECT_DIR" != "*/" ]; then
