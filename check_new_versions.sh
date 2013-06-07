@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This file is part of Composer Tools (https://github.com/sanplomb/composer-tools)
+#
+# (c) Sylvain PLANCON <sylvain.plancon@gmail.com>
+
 BASEDIR=$(dirname $0)
 
 if [ "$1" != "" ]; then

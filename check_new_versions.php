@@ -1,10 +1,8 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * User: splancon
- * Date: 30/05/13
- * Time: 17:21
- * To change this template use File | Settings | File Templates.
+ * This file is part of Composer Tools (https://github.com/sanplomb/composer-tools)
+ *
+ * (c) Sylvain PLANCON <sylvain.plancon@gmail.com>
  */
 
 if ($argc < 2) {
@@ -22,16 +20,15 @@ if (!file_exists($argv[1].'composer.json')) {
 $composerConf = json_decode(file_get_contents($projectDir.'composer.json'));
 
 $minimumStability = "minimum-stability";
-$minimumStability = $composerConf->$minimumStability;
-switch ($minimumStability) {
+switch ($composerConf->$minimumStability) {
     case 'stable':
-        $colorizedMinimumStability = colorize('Green', $minimumStability);
+        $colorizedMinimumStability = colorize('Green', $composerConf->$minimumStability);
         break;
     case 'dev':
-        $colorizedMinimumStability = colorize('Red', $minimumStability);
+        $colorizedMinimumStability = colorize('Red', $composerConf->$minimumStability);
         break;
     default:
-        $colorizedMinimumStability = $minimumStability;
+        $colorizedMinimumStability = $composerConf->$minimumStability;
         break;
 }
 echo 'Search for minimum-visibility : '.$colorizedMinimumStability.PHP_EOL;
@@ -47,7 +44,7 @@ foreach ($composerConf->$requires as $package => $currentVersion) {
         continue;
     }
 
-    $tmpRequire = check_version($package, $currentVersion, $minimumStability);
+    $tmpRequire = check_version($package, $currentVersion, $composerConf->$minimumStability);
 
     if ($tmpRequire !== null) {
         $availableUpdates[$tmpRequire['name']] = $tmpRequire['version'];
@@ -63,7 +60,7 @@ if (isset($composerConf->$requiresDev)) {
             continue;
         }
 
-        $tmpRequire = check_version($package, $currentVersion, $minimumStability);
+        $tmpRequire = check_version($package, $currentVersion, $composerConf->$minimumStability);
         if ($tmpRequire !== null) {
             $availableDevUpdates[$tmpRequire['name']] = $tmpRequire['version'];
         }
@@ -91,7 +88,16 @@ if (isset($composerConf->$requiresDev) && count($composerConf->$requiresDev) > 0
     }
 }
 
-function colorize($color, $text) {
+/**
+ * Colorize text for shell output
+ *
+ * @param string $color name color, must be a key of array $colors that define in function
+ * @param string $text  text to colorize
+ *
+ * @return string
+ */
+function colorize($color, $text)
+{
     $colors = array(
         'close' => "\033[0m",
         'Green' => "\033[0;32m",
@@ -104,12 +110,23 @@ function colorize($color, $text) {
     return $colors[$color].$text.$colors["close"];
 }
 
-function check_version($package, $currentVersion, $minimumStability) {
+/**
+ * Check version for a package and return newer version if greater than a specific version.
+ *
+ * @param string $package          Package name
+ * @param string $currentVersion   reference's version
+ * @param string $minimumStability minimum stability to consider
+ *
+ * @return array|null
+ */
+function check_version($package, $currentVersion, $minimumStability)
+{
     echo "Searching update for ".colorize('Green', $package).PHP_EOL;
 
     // No check if 'dev-master'
     if ($currentVersion == "dev-master") {
         echo "No update need for ".colorize('BWhite', $currentVersion).PHP_EOL.PHP_EOL;
+
         return null;
     }
 
@@ -124,6 +141,7 @@ function check_version($package, $currentVersion, $minimumStability) {
     // No check if '>' or '>=' operators are presents
     if (substr($maxVersion, 0, 1) == '>' || $maxVersion == "*") {
         echo "No update need for ".colorize('BWhite', $currentVersion).PHP_EOL.PHP_EOL;
+
         return null;
     }
     echo "Current max version : ".colorize('Yellow', $maxVersion).PHP_EOL.PHP_EOL;
@@ -149,7 +167,6 @@ function check_version($package, $currentVersion, $minimumStability) {
     preg_match('`versions(\033\[0m)* : (.*)`', $cmdShowResult, $availablesVersions);
     $availablesVersions = preg_split('`,`', $availablesVersions[2]);
 
-    $matchesVersions = array();
     foreach ($availablesVersions as $av) {
         // Strip optional v before version number
         $av = preg_replace('`^v`', '', trim($av));
@@ -165,5 +182,6 @@ function check_version($package, $currentVersion, $minimumStability) {
                 break;
         }
     }
+
     return null;
 }
