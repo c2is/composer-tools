@@ -1,8 +1,9 @@
 <?php
 /**
- * This file is part of Composer Tools (https://github.com/sanplomb/composer-tools)
+ * Check new versions of dependancies
  *
- * (c) Sylvain PLANCON <sylvain.plancon@gmail.com>
+ * @author  Sylvain PLANCON <sylvain.plancon@c2is.fr>
+ * @package composer-tools by C2IS
  */
 
 if ($argc < 2) {
