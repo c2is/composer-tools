@@ -41,7 +41,8 @@ $availableDevUpdates = array();
 
 echo "Start check for ".colorize('BWhite', "require")." section".PHP_EOL;
 foreach ($composerConf->$requires as $package => $currentVersion) {
-    if ($package == "php") {
+    // Exclude php, extensions end libraries
+    if (preg_match('`^php$|^ext-|^lib-`', $package)) {
         continue;
     }
 
