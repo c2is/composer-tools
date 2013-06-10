@@ -8,7 +8,7 @@ The verification is based on your minimum level of stability required.
 REQUIREMENTS
 ============
 
-Composer must be install globally. See [https://github.com/sanplomb/composer](https://github.com/sanplomb/composer#global-installation-of-composer-manual "Instruction for global install") for instruction
+Composer must be install globally. See [https://github.com/sanplomb/composer](https://github.com/composer/composer#global-installation-of-composer-manual "Instruction for global install") for instruction
 
 USAGE
 =====
