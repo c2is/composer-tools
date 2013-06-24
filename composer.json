@@ -1,0 +1,15 @@
+{
+    "name": "c2is/composer-tools",
+    "description": "Tools to help to maintain dependancies' project up-to-date",
+    "require": {
+        "composer/composer": "dev-master"
+    },
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "PLANCON Sylvain",
+            "email": "s.plancon@c2is.fr"
+        }
+    ],
+    "minimum-stability": "stable"
+}

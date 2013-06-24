@@ -1,0 +1,4 @@
+{
+    "no-directory": "Veuillez indiquer le chemin du fichier composer.json.",
+    "no-composer": "Le fichier composer.json est introuvable."
+}

@@ -6,15 +6,18 @@
  * @package composer-tools by C2IS
  */
 
+// Load languages
+$translations = json_encode(file_get_contents('locales/fr.json'));
+
 if ($argc < 2) {
-    echo "Veuillez indiquer le chemin du fichier composer.json.\n";
+    echo $translations['no-directory'].PHP_EOL;
     exit();
 }
 
 $projectDir = $argv[1];
 
 if (!file_exists($argv[1].'composer.json')) {
-    echo "Le fichier composer.json est introuvable.\n";
+    echo $translations['no-composer'].PHP_EOL;
     exit();
 }
 
