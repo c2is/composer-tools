@@ -27,7 +27,11 @@ if [ -f $COMPOSER_FILE ]; then
             PROJECT_DIR=$PROJECT_DIR'/'
         fi
 
-        php $BASEDIR/check_new_versions.php $PROJECT_DIR
+        if [ "$2" != "" ]; then
+            php $BASEDIR/check_new_versions.php $PROJECT_DIR $2
+        else
+            php $BASEDIR/check_new_versions.php $PROJECT_DIR
+        fi
     else
         echo "Votre fichier fichier composer.json comporte des erreurs. Veuillez les corriger avant vérifier les mises à jour possible."
         echo "Rapport de composer :"

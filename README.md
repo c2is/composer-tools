@@ -20,3 +20,15 @@ You could pass the directory of your project as argument otherwise the script as
 ```
 ./check_new_version.sh path/to/your/project/
 ```
+
+LANGUAGE SUPPORT
+================
+
+Script's output support actually english and french
+To specify which language you want to use, just add language code as second argument (en = english, fr = french).
+
+```
+./check_new_version.sh path/to/your/project/ fr
+```
+
+If you don't specify language code, the script use your system language or use english if your system language isn't supported.

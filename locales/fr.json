@@ -1,4 +1,18 @@
 {
+    "no-translation-found": "No translation files was found for your language. Using English language file by default",
+    "no-translation-specified": "No language specified. Using English language file by default",
+    "use-system-language-for-translation": "No language specified. Using system language to load file",
     "no-directory": "Veuillez indiquer le chemin du fichier composer.json.",
-    "no-composer": "Le fichier composer.json est introuvable."
+    "no-composer": "Le fichier composer.json est introuvable.",
+    "search-stability": "Recherche pour la stabilité minimum (minimum-stability) : %s",
+    "check-for-section": "Début de la vérification pour la section %s",
+    "no-require-update-found": "Aucune de mise à jour trouvé pour vos dépendances.",
+    "no-require-dev-update-found": "Aucune de mise à jour trouvé pour vos dépendances de développement.",
+    "summary-title": "Résumé des mise à jour disponibles",
+    "summary-section": "Section : %s",
+    "summary-stability": "Stablité : %s",
+    "update-available-for": "Mise à jour disponible pour %s: la dernière version est %s",
+    "search-for": "Recherche de mise à jour pour %s",
+    "no-update-need": "Aucune mise à jour nécessaire pour la contrainte %s",
+    "current-max-version": "Version maximum prise en compte : %s"
 }

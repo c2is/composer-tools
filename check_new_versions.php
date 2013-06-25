@@ -7,7 +7,23 @@
  */
 
 // Load languages
-$translations = json_encode(file_get_contents('locales/fr.json'));
+if (isset($argv[2])) {
+    if (file_exists('locales/'.$argv[2].'.json')) {
+        $translations = json_decode(file_get_contents('locales/'.$argv[2].'.json'), true);
+    } else {
+        $translations = json_decode(file_get_contents('locales/en.json'), true);
+//        echo $translations['no-translation-found'].PHP_EOL;
+    }
+} else {
+    $userLanguage = Locale::getPrimaryLanguage($_SERVER['LANG']);
+    if (file_exists('locales/'.$userLanguage.'.json')) {
+        $translations = json_decode(file_get_contents('locales/'.$userLanguage.'.json'), true);
+//        echo $translations['use-system-language-for-translation'].PHP_EOL;
+    } else {
+        $translations = json_decode(file_get_contents('locales/en.json'), true);
+//        echo $translations['no-translation-specified'].PHP_EOL;
+    }
+}
 
 if ($argc < 2) {
     echo $translations['no-directory'].PHP_EOL;
@@ -35,14 +51,14 @@ switch ($composerConf->$minimumStability) {
         $colorizedMinimumStability = $composerConf->$minimumStability;
         break;
 }
-echo 'Search for minimum-visibility : '.$colorizedMinimumStability.PHP_EOL;
+echo sprintf($translations['search-stability'] ,$colorizedMinimumStability).PHP_EOL;
 
 $requires = "require";
 
 $availableUpdates = array();
 $availableDevUpdates = array();
 
-echo "Start check for ".colorize('BWhite', "require")." section".PHP_EOL;
+echo sprintf($translations['check-for-section'], colorize('BWhite', "require")).PHP_EOL;
 foreach ($composerConf->$requires as $package => $currentVersion) {
     // Exclude php, extensions end libraries
     if (preg_match('`^php$|^ext-|^lib-`', $package)) {
@@ -59,7 +75,7 @@ foreach ($composerConf->$requires as $package => $currentVersion) {
 $requiresDev = "require-dev";
 if (isset($composerConf->$requiresDev)) {
 
-    echo "Start check for ".colorize('BWhite', $requiresDev)." section".PHP_EOL;
+    echo sprintf($translations['check-for-section'], colorize('BWhite', $requiresDev)).PHP_EOL;
     foreach ($composerConf->$requiresDev as $package => $currentVersion) {
         if ($package == "php") {
             continue;
@@ -73,22 +89,26 @@ if (isset($composerConf->$requiresDev)) {
 }
 
 if (count($availableUpdates) == 0) {
-    echo colorize('BWhite', "No update found for your dependancies.".PHP_EOL);
+    echo colorize('BWhite', sprintf($translations['no-require-update-found'])).PHP_EOL;
 } else {
-    echo colorize('BWhite', "Summary of available updates for ").colorize('Green', $requires).colorize('BWhite', " section in ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
+    echo colorize('BWhite', $translations['summary-title']).PHP_EOL;
+    echo colorize('BWhite', sprintf($translations['summary-section'], colorize('Green', $requires))).PHP_EOL;
+    echo colorize('BWhite', sprintf($translations['summary-stability'], $colorizedMinimumStability)).PHP_EOL;
     foreach ($availableUpdates as $package => $au) {
-        echo "Update found for ".colorize('Green', $package).": last available version is ".colorize('Yellow', $au).PHP_EOL;
+        echo sprintf($translations['update-available-for'], colorize('Green', $package), colorize('Yellow', $au)).PHP_EOL;
     }
 }
 
 if (isset($composerConf->$requiresDev) && count($composerConf->$requiresDev) > 0) {
     echo PHP_EOL;
     if (count($availableDevUpdates) == 0) {
-        echo colorize('BWhite', "No update found for your dev dependancies.".PHP_EOL);
+        echo colorize('BWhite', sprintf($translations['no-require-dev-update-found'])).PHP_EOL;
     } else {
-        echo colorize('BWhite', "Summary of available updates for ").colorize('Yellow', $requiresDev).colorize('BWhite', " section in ").$colorizedMinimumStability.colorize('BWhite', " stability")."\n";
+        echo colorize('BWhite', $translations['summary-title']).PHP_EOL;
+        echo colorize('BWhite', sprintf($translations['summary-section'], colorize('Yellow', $requiresDev))).PHP_EOL;
+        echo colorize('BWhite', sprintf($translations['summary-stability'], $colorizedMinimumStability)).PHP_EOL;
         foreach ($availableDevUpdates as $package => $au) {
-            echo "Update found for ".colorize('Green', $package).": last available version is ".colorize('Yellow', $au).PHP_EOL;
+            echo sprintf($translations['update-available-for'], colorize('Green', $package), colorize('Yellow', $au)).PHP_EOL;
         }
     }
 }
@@ -126,11 +146,13 @@ function colorize($color, $text)
  */
 function check_version($package, $currentVersion, $minimumStability)
 {
-    echo "Searching update for ".colorize('Green', $package).PHP_EOL;
+    global $translations;
+
+    echo sprintf($translations['search-for'], colorize('Green', $package)).PHP_EOL;
 
     // No check if 'dev-master'
     if ($currentVersion == "dev-master") {
-        echo "No update need for ".colorize('BWhite', $currentVersion).PHP_EOL.PHP_EOL;
+        echo sprintf($translations['no-update-need'], colorize('BWhite', $currentVersion)).PHP_EOL.PHP_EOL;
 
         return null;
     }
@@ -143,13 +165,14 @@ function check_version($package, $currentVersion, $minimumStability)
     } else {
         $maxVersion = $minVersion;
     }
+
     // No check if '>' or '>=' operators are presents
     if (substr($maxVersion, 0, 1) == '>' || $maxVersion == "*") {
-        echo "No update need for ".colorize('BWhite', $currentVersion).PHP_EOL.PHP_EOL;
+        echo sprintf($translations['no-update-need'], colorize('BWhite', $currentVersion)).PHP_EOL.PHP_EOL;
 
         return null;
     }
-    echo "Current max version : ".colorize('Yellow', $maxVersion).PHP_EOL.PHP_EOL;
+    echo sprintf($translations['current-max-version'], colorize('Yellow', $maxVersion)).PHP_EOL.PHP_EOL;
 
     // Création du tableau de version
     preg_match('`^([<=>!~]*)([0-9]*).([0-9*-]*).([0-9*-]*)`', $maxVersion, $cvDetails);
