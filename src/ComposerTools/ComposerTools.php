@@ -15,12 +15,12 @@ class ComposerTools {
     {
         // Load translations
         if (isset($language)) {
-            if (file_exists('locales/'.\Locale::getPrimaryLanguage($language).'.json')) {
+            if (file_exists(__DIR__.'/locales/'.\Locale::getPrimaryLanguage($language).'.json')) {
                 $this->lang = \Locale::getPrimaryLanguage($language);
             }
         } else {
             $userLanguage = \Locale::getPrimaryLanguage($_SERVER['LANG']);
-            if (file_exists('locales/'.$userLanguage.'.json')) {
+            if (file_exists(__DIR__.'/locales/'.$userLanguage.'.json')) {
                 $this->lang = $userLanguage;
             }
         }
