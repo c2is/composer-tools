@@ -11,10 +11,5 @@
             "email": "s.plancon@c2is.fr"
         }
     ],
-    "minimum-stability": "stable",
-    "autoload": {
-        "psr-0": {
-            "": "src/"
-        }
-    }
+    "minimum-stability": "stable"
 }
