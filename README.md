@@ -4,7 +4,7 @@ COMPOSER TOOLS
 This script verify if new versions of your dependencies are availables to help you to maintain up to date your composer.json.
 It shows the latest version of dependencies if it will not be taken into account by your composer.json but doesn't modify your composer.json.
 
-The verification is based on your minimum level of stability required. Actually only dev and stable stability are supported.
+The verification is based on your minimum level of stability required. Actually only dev and stable stabilities are supported.
 
 REQUIREMENTS
 ============
