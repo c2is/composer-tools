@@ -30,16 +30,16 @@ if (!file_exists($argv[1].'composer.json')) {
 
 // Loading composer.json
 $composerTools->loadComposerFile($projectDir);
-
-switch ($composerTools->getComposerConfig("minimum-stability")) {
+$minimumStability = $composerTools->getComposerConfig("minimum-stability");
+switch ($minimumStability) {
     case 'stable':
-        $colorizedMinimumStability = Utils::colorize('Green', $composerTools->getComposerConfig("minimum-stability"));
+        $colorizedMinimumStability = Utils::colorize('Green', $minimumStability);
         break;
     case 'dev':
-        $colorizedMinimumStability = Utils::colorize('Red', $composerTools->getComposerConfig("minimum-stability"));
+        $colorizedMinimumStability = Utils::colorize('Red', $minimumStability);
         break;
     default:
-        $colorizedMinimumStability = $composerTools->getComposerConfig("minimum-stability");
+        $colorizedMinimumStability = $minimumStability;
         break;
 }
 echo sprintf($composerTools->translations['search-stability'] ,$colorizedMinimumStability).PHP_EOL;
@@ -47,6 +47,7 @@ echo sprintf($composerTools->translations['search-stability'] ,$colorizedMinimum
 $availableUpdates = array();
 $availableDevUpdates = array();
 
+// Check available updates for 'require' section
 echo sprintf($composerTools->translations['check-for-section'], Utils::colorize('BWhite', "require")).PHP_EOL;
 foreach ($composerTools->getComposerConfig("require") as $package => $currentVersion) {
     // Exclude php, extensions end libraries
@@ -54,28 +55,31 @@ foreach ($composerTools->getComposerConfig("require") as $package => $currentVer
         continue;
     }
 
-    $tmpRequire = $composerTools->check_version($package, $currentVersion, $composerTools->getComposerConfig("minimum-stability"));
+    $tmpRequire = $composerTools->check_version($package, $currentVersion, $minimumStability);
 
     if ($tmpRequire !== null) {
         $availableUpdates[$tmpRequire['name']] = $tmpRequire['version'];
     }
 }
 
+// Check available updates for 'require-dev' section if exist
 if ($composerTools->getComposerConfig("require-dev"))
 {
     echo sprintf($composerTools->translations['check-for-section'], Utils::colorize('BWhite', "require-dev")).PHP_EOL;
     foreach ($composerTools->getComposerConfig("require-dev") as $package => $currentVersion) {
-        if ($package == "php") {
+        // Exclude php, extensions end libraries
+        if (preg_match('`^php$|^ext-|^lib-`', $package)) {
             continue;
         }
 
-        $tmpRequire = $composerTools->check_version($package, $currentVersion, $composerTools->getComposerConfig("minimum-stability"));
+        $tmpRequire = $composerTools->check_version($package, $currentVersion, $minimumStability);
         if ($tmpRequire !== null) {
             $availableDevUpdates[$tmpRequire['name']] = $tmpRequire['version'];
         }
     }
 }
 
+// Show report for 'require' section
 if (count($availableUpdates) == 0) {
     echo Utils::colorize('BWhite', sprintf($composerTools->translations['no-require-update-found'])).PHP_EOL;
 } else {
@@ -87,6 +91,7 @@ if (count($availableUpdates) == 0) {
     }
 }
 
+// Show report for 'rquire-dev' section
 if ($composerTools->getComposerConfig("require-dev") && count($composerTools->getComposerConfig("require-dev")) > 0) {
     echo PHP_EOL;
     if (count($availableDevUpdates) == 0) {

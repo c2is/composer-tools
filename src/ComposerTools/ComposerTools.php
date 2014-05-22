@@ -68,9 +68,9 @@ class ComposerTools {
             return null;
         }
 
+        // Parsing package versions
         $tmpVersions = preg_split('`,`', $currentVersion);
         $minVersion = $tmpVersions[0];
-
         if (count($tmpVersions) > 1) {
             $maxVersion = $tmpVersions[1];
         } else {
@@ -85,7 +85,7 @@ class ComposerTools {
         }
         echo sprintf($this->translations['current-max-version'], Utils::colorize('Yellow', $maxVersion)).PHP_EOL.PHP_EOL;
 
-        // Parsing max version
+        // Decompose max version number
         preg_match('`^([<=>!~]*)v?([0-9]*).([0-9*-]*).([0-9*-]*)`', $maxVersion, $cvDetails);
 
         if ($cvDetails[4] == '*' || $cvDetails[4] == '') {
@@ -95,6 +95,7 @@ class ComposerTools {
             $cvDetails[4] = (string) ($cvDetails[4] + 1);
         }
 
+        // Construct the minimum version number that will be considered as an update
         $minVersionToUpdate = implode('.', array_slice($cvDetails, 2, count($cvDetails)-2));
         switch ($minimumStability) {
             case 'dev':
@@ -102,6 +103,7 @@ class ComposerTools {
                 break;
         }
 
+        // Get all available version numbers
         $cmdShowResult = `composer show $package | grep 'versions'`;
         preg_match('`versions(\033\[0m)* : (.*)`', $cmdShowResult, $availablesVersions);
         $availablesVersions = preg_split('`,`', $availablesVersions[2]);
