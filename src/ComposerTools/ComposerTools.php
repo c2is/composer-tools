@@ -1,8 +1,4 @@
 <?php
-/**
- *
- */
-
 namespace ComposerTools;
 
 class ComposerTools {
@@ -11,7 +7,7 @@ class ComposerTools {
     private $lang = 'en';
     private $conf;
 
-    public function __construct($language)
+    public function __construct($language='')
     {
         // Load translations
         if (isset($language)) {
@@ -27,11 +23,21 @@ class ComposerTools {
         $this->translations = json_decode(file_get_contents(__DIR__.'/locales/'.$this->lang.'.json'), true);
     }
 
+    /**
+     * Load content of composer.json
+     *
+     * @param $pathToFile string Path to composer.json file to check
+     */
     public function loadComposerFile($pathToFile)
     {
         $this->conf = json_decode(file_get_contents($pathToFile.'composer.json'));
     }
 
+    /**
+     * @param $config
+     *
+     * @return null
+     */
     public function getComposerConfig($config)
     {
         if (!is_string($config) || !isset($this->conf->$config))
@@ -79,8 +85,8 @@ class ComposerTools {
         }
         echo sprintf($this->translations['current-max-version'], Utils::colorize('Yellow', $maxVersion)).PHP_EOL.PHP_EOL;
 
-        // Création du tableau de version
-        preg_match('`^([<=>!~]*)([0-9]*).([0-9*-]*).([0-9*-]*)`', $maxVersion, $cvDetails);
+        // Parsing max version
+        preg_match('`^([<=>!~]*)v?([0-9]*).([0-9*-]*).([0-9*-]*)`', $maxVersion, $cvDetails);
 
         if ($cvDetails[4] == '*' || $cvDetails[4] == '') {
             $cvDetails[3] = (string) ($cvDetails[3] + 1);
@@ -102,14 +108,14 @@ class ComposerTools {
 
         foreach ($availablesVersions as $av) {
             // Strip optional v before version number
-            $av = preg_replace('`^v`', '', trim($av));
+            $tav = preg_replace('`^v`', '', trim($av));
             switch ($minimumStability) {
                 case 'stable':
-                    if (preg_match('`-dev$`', $av)) {
+                    if (preg_match('`-dev$`', $av) || $av == 'dev-master' || preg_match('`[alpha|beta][0-9]*`', $av)) {
                         break;
                     }
                 case 'dev':
-                    if (version_compare(preg_replace('`x`', 0, $av), $minVersionToUpdate, '>=')) {
+                    if (version_compare(preg_replace('`x`', 0, $tav), $minVersionToUpdate, '>=')) {
                         return array('name' => $package, 'version' => $av);
                     }
                     break;
